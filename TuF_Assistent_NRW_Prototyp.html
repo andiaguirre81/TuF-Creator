@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TuF-Assistent NRW – Prototyp</title>
+<style>
+:root{--green:#456b58;--sage:#dfe9df;--cream:#faf7ef;--terra:#b86f55;--ink:#26332d;--line:#ccd6cf}
+*{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:var(--cream);color:var(--ink)}
+header{background:var(--green);color:white;padding:24px} header h1{margin:0 0 6px;font-size:1.7rem} header p{margin:0;opacity:.92}
+main{max-width:1050px;margin:auto;padding:22px}.card{background:white;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:0 2px 8px #0000000b}
+h2{font-size:1.15rem;margin:0 0 12px} label{display:block;font-weight:650;margin:10px 0 5px} select,input,textarea{width:100%;padding:10px;border:1px solid #b9c5bd;border-radius:8px;font:inherit;background:white}
+textarea{min-height:90px;resize:vertical}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.checks{display:grid;grid-template-columns:1fr 1fr;gap:8px}.checks label{font-weight:400;margin:0;padding:8px;background:#f5f8f5;border-radius:8px}.checks input{width:auto;margin-right:7px}
+button{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;background:var(--green);color:white;margin:5px 6px 5px 0}.secondary{background:var(--terra)}.ghost{background:#e8eee9;color:var(--ink)}
+.output{white-space:pre-wrap;background:#f7faf7;border-left:4px solid var(--green);padding:14px;border-radius:8px;min-height:100px}
+.note{font-size:.9rem;color:#58665f}.tag{display:inline-block;background:var(--sage);padding:4px 8px;border-radius:20px;margin:3px;font-size:.85rem}
+@media(max-width:700px){.grid,.checks{grid-template-columns:1fr}}
+@media print{button,.note.no-print{display:none} body{background:white}.card{box-shadow:none;break-inside:avoid} header{background:white;color:black;border-bottom:2px solid #444}}
+</style>
+</head>
+<body>
+<header>
+<h1>TuF-Assistent NRW</h1>
+<p>Formulierungshilfe für ressourcen- und teilhabeorientierte Teilhabe- und Förderplanung</p>
+</header>
+<main>
+<div class="card">
+<h2>1. Ausgangspunkt</h2>
+<div class="grid">
+<div><label>Kind / Kürzel (optional)</label><input id="name" placeholder="z. B. L."></div>
+<div><label>ICF-Lebensbereich</label><select id="area"></select></div>
+</div>
+<p class="note">Der Prototyp speichert nichts auf einem Server. Für die fachliche Bewertung bleiben Beobachtung und Auswahl bei der Fachkraft.</p>
+</div>
+
+<div class="card">
+<h2>2. Beobachtung auswählen</h2>
+<div id="checks" class="checks"></div>
+<label>Konkrete Beobachtung / Situation</label>
+<textarea id="obs" placeholder="z. B. Im Morgenkreis beteiligt sich L. für einige Minuten und benötigt anschließend eine kurze direkte Ansprache."></textarea>
+<button onclick="makeDescription()">Fachliche Formulierung erzeugen</button>
+</div>
+
+<div class="card">
+<h2>3. Ressourcen- und teilhabeorientierte Beschreibung</h2>
+<div id="description" class="output">Noch keine Formulierung erstellt.</div>
+<button class="ghost" onclick="copyText('description')">Text kopieren</button>
+</div>
+
+<div class="card">
+<h2>4. Teilhabeziel und Maßnahmen</h2>
+<label>Zielvorschlag</label><select id="goal"></select>
+<label>Passende Maßnahmen</label><div id="measures" class="checks"></div>
+<label>Eigene Ergänzung</label><textarea id="extraMeasure" placeholder="Weitere individuelle Maßnahme …"></textarea>
+<button onclick="makePlan()">Zielplanung erzeugen</button>
+</div>
+
+<div class="card">
+<h2>5. Ausgabe für den TuF</h2>
+<div id="plan" class="output">Noch keine Zielplanung erstellt.</div>
+<button class="ghost" onclick="copyText('plan')">Text kopieren</button>
+<button class="secondary" onclick="window.print()">Drucken / als PDF sichern</button>
+</div>
+
+<div class="card">
+<h2>Kindperspektive – optional</h2>
+<div class="grid">
+<div><label>Ziele und Wünsche</label><select id="childGoal">
+<option>Ich möchte gerne neue Sachen lernen und mich ausprobieren.</option>
+<option>Ich möchte gerne selbst entscheiden und selbstsicherer werden.</option>
+<option>Ich möchte besser mit anderen Kindern spielen und meine Wünsche sagen können.</option>
+<option>Ich möchte Dinge zunehmend selbstständig schaffen.</option>
+</select></div>
+<div><label>Was gelingt / macht Freude?</label><select id="childStrength">
+<option>Ich bin neugierig und probiere gerne neue Dinge aus.</option>
+<option>Ich spiele gerne mit anderen Kindern.</option>
+<option>Ich bewege mich gerne.</option>
+<option>Ich male und bastle gerne.</option>
+</select></div>
+</div>
+<label>Was ist schwierig?</label><select id="childHard">
+<option>Manchmal fällt es mir schwer, meine Wünsche zu äußern.</option>
+<option>Manchmal kann ich mich nicht so lange auf eine Tätigkeit konzentrieren.</option>
+<option>Manchmal brauche ich Hilfe, wenn eine Situation schwierig für mich wird.</option>
+<option>Manchmal brauche ich Unterstützung, um Aufgaben selbstständig zu bewältigen.</option>
+</select>
+<button onclick="makeChild()">Kindperspektive erstellen</button>
+<div id="childOut" class="output">Noch keine Kindperspektive erstellt.</div>
+</div>
+</main>
+
+<script>
+const DATA={
+"Lernen und Wissensaneignung":{
+ codes:["d160 Aufmerksamkeit fokussieren","b140 Aufmerksamkeitsfunktionen"],
+ items:["beteiligt sich an kurzen Aufgaben","kann sich bei interessanten Aufgaben fokussieren","profitiert von klar strukturierten Aufgaben","benötigt gelegentliche direkte Ansprache","benötigt Unterstützung, die Aufmerksamkeit aufrechtzuerhalten"],
+ goal:["hält die Aufmerksamkeit bei klar strukturierten Aufgaben zunehmend über einen vereinbarten Zeitraum aufrecht","bearbeitet eine überschaubare Aufgabe mit zunehmend weniger verbaler Unterstützung"],
+ measures:["Kleingruppenangebote","klare und kurze Arbeitsaufträge","reizreduzierte Lernumgebung","heilpädagogisches Angebot","gezielte Mal- und Bastelangebote","positive Bestärkung"]
+},
+"Allgemeine Aufgaben und Anforderungen":{
+ codes:["d230 täglichen Ablauf durchführen / Aufgaben übernehmen","d240 mit Stress und psychischen Anforderungen umgehen"],
+ items:["kann klar strukturierte Aufgaben bearbeiten","orientiert sich an bekannten Tagesabläufen","benötigt bei Mehrfachaufgaben gezielte Anleitung","kann sich mit Begleitung in herausfordernden Situationen regulieren","profitiert von vorhersehbaren Abläufen"],
+ goal:["bewältigt klar strukturierte Aufgaben zunehmend selbstständig","reguliert sich in herausfordernden Situationen zunehmend mit weniger pädagogischer Unterstützung"],
+ measures:["visualisierte Abläufe","begleitetes Spiel","Kleingruppenarbeit","Rituale und Wiederholungen","frühzeitige verbale Orientierung","Rückzugsmöglichkeit"]
+},
+"Kommunikation":{
+ codes:["d330 Sprechen","d310/d315 Kommunikation verstehen"],
+ items:["kann sich sprachlich mitteilen","nutzt ergänzend Mimik und Gestik","versteht einfache Kommunikationsangebote","benötigt Unterstützung bei Aussprache oder Grammatik","benötigt zusätzliche Reaktionszeit","profitiert von sprachlichen Modellen"],
+ goal:["bringt eigene Wünsche und Bedürfnisse zunehmend verständlich zum Ausdruck","beteiligt sich zunehmend aktiv an Gesprächssituationen"],
+ measures:["Sprachspiele","Morgenkreis und Singspiele","begleitetes Spiel","sprachliche Modellierung","ausreichende Reaktionszeit","Logopädie, sofern verordnet"]
+},
+"Mobilität":{
+ codes:["d440 feinmotorischer Handgebrauch","d450 Gehen/Fortbewegen"],
+ items:["nutzt Schreib- und Bastelmaterial","bewegt sich gerne","benötigt Übung bei feinmotorischen Tätigkeiten","benötigt bei komplexeren Bewegungsabläufen Anleitung","zeigt zunehmende Sicherheit in bekannten Bewegungsabläufen"],
+ goal:["bewältigt Mal-, Schneide- und Bastelangebote zunehmend sicher und selbstständig","führt einfache Bewegungsabläufe zunehmend koordiniert und sicher aus"],
+ measures:["Gruppenturnen","Bewegungsparcours","Kleingruppenangebot Motorik","gezielte Mal- und Bastelangebote","Ergotherapie, sofern verordnet","verbale Bewegungsanleitung"]
+},
+"Selbstversorgung":{
+ codes:["d530 Toilettenbenutzung","d550 Essen / d560 Trinken"],
+ items:["führt Teile der Selbstversorgung selbstständig aus","benötigt gelegentliche Erinnerung","nimmt Unterstützungsangebote an","zeigt zunehmende Eigeninitiative","profitiert von festen Ritualen"],
+ goal:["führt den ausgewählten Bereich der Selbstversorgung zunehmend selbstständig aus","meldet eigenen Unterstützungsbedarf zunehmend rechtzeitig"],
+ measures:["feste Rituale","mündliche Erinnerung","visuelle Erinnerung","positive Bestärkung","ausreichend Zeit für selbstständiges Handeln"]
+},
+"Häusliches Leben":{
+ codes:["d640 Hausarbeiten / Mithilfe"],
+ items:["übernimmt kleine alltagspraktische Aufgaben","räumt Materialien mit Unterstützung auf","zeigt Interesse an hauswirtschaftlichen Tätigkeiten","benötigt klare Einzelschritte"],
+ goal:["übernimmt kleine alltagspraktische Aufgaben zunehmend selbstständig"],
+ measures:["kleine Dienste im Gruppenalltag","Aufgaben in Einzelschritte gliedern","gemeinsames Aufräumen","positive Bestärkung"]
+},
+"Interpersonelle Interaktionen und Beziehungen":{
+ codes:["d710 elementare interpersonelle Interaktionen"],
+ items:["nimmt Kontakt zu anderen Kindern auf","lässt sich auf gemeinsame Aktivitäten ein","äußert eigene Wünsche","orientiert sich stark an anderen Kindern","benötigt Unterstützung bei Abgrenzung","benötigt Begleitung in Konflikten"],
+ goal:["bringt eigene Wünsche und Entscheidungen zunehmend selbstständig in das Spiel mit anderen Kindern ein","gestaltet Kontakte zu anderen Kindern zunehmend selbstsicher und berücksichtigt dabei eigene und fremde Bedürfnisse"],
+ measures:["begleitetes Spiel","Rollenspiel","Puppenhaus oder Kaufladen","Kleingruppenarbeit","Projektarbeit","sprachliche Begleitung von Konflikten","positive Bestärkung"]
+},
+"Bedeutende Lebensbereiche":{
+ codes:["d815 Vorschulerziehung","d880 Spiel"],
+ items:["beteiligt sich an Spielangeboten","zeigt eigene Spielideen","nimmt an Bildungsangeboten teil","benötigt Unterstützung beim Einstieg in gemeinsames Spiel","profitiert von überschaubaren Kleingruppen"],
+ goal:["beteiligt sich zunehmend selbstständig und aktiv an Spiel- und Bildungsangeboten"],
+ measures:["Freispielbegleitung","Kleingruppenangebote","Projektarbeit","Vorschularbeit","Interessen des Kindes gezielt aufgreifen"]
+},
+"Gemeinschaft / soziales Leben":{
+ codes:["d910 Gemeinschaftsleben","d920 Erholung und Freizeit"],
+ items:["nimmt an gemeinsamen Aktivitäten teil","zeigt Interesse an Festen und Ausflügen","benötigt Orientierung in größeren Gruppen","profitiert von vertrauter Begleitung"],
+ goal:["nimmt zunehmend sicher und aktiv an gemeinschaftlichen Aktivitäten der Kita teil"],
+ measures:["vertraute Bezugsperson","Vorbereitung auf besondere Aktivitäten","überschaubare Teilgruppen","Rückzugsmöglichkeit","aktive Einbindung in Gemeinschaftsangebote"]
+}
+};
+
+const area=document.getElementById("area");
+Object.keys(DATA).forEach(x=>area.add(new Option(x,x)));
+area.onchange=render; render();
+
+function render(){
+ const d=DATA[area.value], c=document.getElementById("checks"), g=document.getElementById("goal"), m=document.getElementById("measures");
+ c.innerHTML=d.items.map((x,i)=>`<label><input type="checkbox" name="item" value="${x}">${x}</label>`).join("");
+ g.innerHTML=d.goal.map(x=>`<option>${x}</option>`).join("");
+ m.innerHTML=d.measures.map(x=>`<label><input type="checkbox" name="measure" value="${x}">${x}</label>`).join("");
+}
+function who(){return document.getElementById("name").value.trim()||"Das Kind"}
+function makeDescription(){
+ const d=DATA[area.value], sel=[...document.querySelectorAll('input[name=item]:checked')].map(x=>x.value), o=document.getElementById("obs").value.trim();
+ let s=`${area.value}\nICF-Bezug: ${d.codes.join("; ")}\n\n`;
+ if(sel.length) s+=`${who()} ${sel.join(", ")}. `;
+ s+=`Die Beschreibung macht vorhandene Fähigkeiten sichtbar und benennt zugleich den Unterstützungsbedarf im Hinblick auf die Teilhabe.`;
+ if(o) s+=`\n\nKonkrete Beobachtung: ${o}`;
+ document.getElementById("description").textContent=s;
+}
+function makePlan(){
+ const ms=[...document.querySelectorAll('input[name=measure]:checked')].map(x=>x.value);
+ const ex=document.getElementById("extraMeasure").value.trim(); if(ex)ms.push(ex);
+ document.getElementById("plan").textContent=`Teilhabeziel – ${area.value}\n${who()} ${document.getElementById("goal").value}.\n\nMaßnahmen\n${ms.length?ms.map(x=>"• "+x).join("\n"):"• individuell festzulegen"}\n\nWer unterstützt bei der Umsetzung?\n• pädagogische Fachkräfte / zuständige Förder- und Inklusionskräfte\n\nÜberprüfung\n• Termin individuell festlegen`;
+}
+function makeChild(){
+ document.getElementById("childOut").textContent=`Welche Ziele und Wünsche hast du?\n${childGoal.value}\n\nWas kannst du gut, magst du gerne?\n${childStrength.value}\n\nWas ist schwierig für dich?\n${childHard.value}`;
+}
+async function copyText(id){
+ const t=document.getElementById(id).textContent; await navigator.clipboard.writeText(t);
+}
+</script>
+</body></html>
